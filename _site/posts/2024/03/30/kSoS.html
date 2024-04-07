@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Kernel sum of squares as regression in RKHS | KYP Diary</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="Kernel sum of squares as regression in RKHS" />
+<meta name="author" content="CompleteMetricSpace" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this short post I want to clarify how the recent “kernel Sum-of-Squares” (kSoS) technique introduced in [1] can be seen as a special case of the more established kernel regression. To start, I first repeat the classical kernel regression problem. Suppose that we have some data $x_1,\ldots,x_n \in X$ in some given set $X$ and corresponding values $y_1,\ldots,y_n \in \mathbb{R}$. We want to find an interpolant $f:X \to \mathbb{R}$ such that $y_i = f(x_i)$ for all $i=1,\ldots,n$. One common nonparametric approach is to assume that $f$ belongs to a so-called reproducing kernel Hilbert space (RKHS) $\mathscr{H}$, which is just a Hilbert space such that $\mathscr{H} \subseteq \mathbb{R}^X$ as a subspace and such that the linear forms $\operatorname{ev}_x:f \mapsto f(x)$ are continuous on $\mathscr{H}$. The (least square) regularized kernel regression problem [2,3,4], also known as support vector regression (SVR), is then stated as computing $$ \begin{align} \label{eq:classicalSVR} \mathop{\mathrm{argmin}}_{f \in \mathscr{H}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,. \end{align} $$ where $\lambda &gt; 0$ is a regularization parameter, which, similar to the Tikhonov regularization, punishes the “complexity” of $f$ measured by the RKHS norm $\lVert \cdot \rVert_{\mathscr{H}}$. Now, problem \eqref{eq:classicalSVR} is, even though $\mathscr{H}$ is generally infinite-dimensional, computationally tractable. Indeed, it is a straightforward consequence of the Riesz-Fischer theorem that there exists some unique function, called the kernel of $\mathscr{H}$, $k:X \times X \to \mathbb{R}$ such that $k(\cdot,x) \in \mathscr{H}$ and that $\langle f,k(\cdot,x)\rangle = f(x)$ for all $x \in X$ and $f \in \mathscr{H}$. Less straightforward, but not difficult to show, is the converse fact that every function $k:X \times X \to \mathbb{R}$ that is positive definite (i.e. $(k(z_i,z_j))_{i,j=1}^m$ is a p.s.d. matrix for all finite subsets $\{z_1,\ldots,z_m\} \subseteq X$) defines a unique RKHS $\mathscr{H} = \mathscr{H}_k$ with $k$ as kernel. Thus instead of describing the infinite-dimensional $\mathscr{H}$ we can just as well specify a kernel $k$ explicitly. The following celebrated theorem is then the cornerstone for the tractability of \eqref{eq:classicalSVR}: Representer Theorem The problem \eqref{eq:classicalSVR} has a unique solution $f^*$, which can be represented as $$ \begin{align} \label{eq:representerTheorem} f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i) \end{align} $$ for some $\alpha_1,\ldots,\alpha_n \in \mathbb{R}$. In other words: The minimizer $f^*$ lies in the finite-dimensional subspace $$ \notag \mathscr{V}_{\text{data}} = \mathscr{V}(\{x_1,\ldots,x_n\}) = \mathrm{span}\{k(\cdot,x_i) \mid i=1,\ldots,n\} $$ spanned by the data $x_1,\ldots,x_n$. This is hardly surprising from an optimization point of view, since introducing the additional variables $e_i = y_i - f(x_i) = y_i - \langle f,k(\cdot,x_i)\rangle$ yields $n$ constraints, to which there correspond $n$ variables in the Lagrangian dual problem. A more direct way to see the representer theorem is to orthogonally project any apparent minimizer $f^* \notin \mathscr{V}_{\text{data}}$ of \eqref{eq:classicalSVR} onto $\mathscr{V}_{\text{data}}$ and to note that this will strictly reduce the objective, since $\lVert P_{\mathscr{V}_{\text{data}}} f^* \rVert_{\mathscr{H}} &lt; \lVert f^* \rVert_{\mathscr{H}}$, but $$ \notag (P_{\mathscr{V}_{\text{data}}} f^*)(x_i) = \langle P_{\mathscr{V}_{\text{data}}} f^*,k(\cdot,x_i)\rangle = \langle f^*,P_{\mathscr{V}_{\text{data}}} k(\cdot,x_i)\rangle = \langle f^*, k(\cdot,x_i)\rangle = f^*(x_i)\,. $$ Now, plugging \eqref{eq:representerTheorem} into \eqref{eq:classicalSVR} results in a convex quadratic program that is readily solved by numerical methods, showing the tractability of \eqref{eq:classicalSVR}. Unfortunately the entire situation chances if we impose additional constraints on $f$ in \eqref{eq:classicalSVR}: Suppose, for instance, that we want to regress only with nonnegative functions (because e.g. we know that the true function is a probability density). This problem can now be stated as \begin{align} \label{eq:nonnegativeSVR} \mathop{\mathrm{argmin}}_{\substack{f \in \mathscr{H} \\ f(x) \geq 0 \; \forall x \in X}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,. \end{align} The difference of \eqref{eq:nonnegativeSVR} to \eqref{eq:classicalSVR} is the convex constraint $f(x) \geq 0$ for all $x \in X$. However, this constraint is semi-infinite, since $X$ is generally infinite (e.g. $X = \mathbb{R}^d$). Notice that we can rewrite the latter constraint as $$ \notag f \in C^* \quad \text{where} \quad C = \operatorname{cone}\{k(\cdot,x) \mid x \in X\}\,, $$ where $\operatorname{cone}$ denotes the closed, convex, conic hull and $C^* = \{f \in \mathscr{H} \mid \langle f,g\rangle \geq 0 \; \forall g \in \mathscr{H}\}$ is the dual cone of $C$. The main difficulty is that $C$ is, in general, not finitely generated and is not contained in a finite-dimensional subspace of $\mathscr{H}$: Indeed, if we had $C = \mathrm{cone}\{g_1,\ldots,g_m\}$ for some explicitly known, finite set $g_1,\ldots,g_m \in \mathscr{H}$, then we could mimic the proof of the representer theorem by projecting $f^*$ onto the subspace $$ \notag \mathscr{V} = \mathscr{V}_{\text{data}} \lor \mathscr{V}_{\text{constr}} $$ with $\mathscr{V}_{\text{constr}} = \mathrm{span}{g_1,\ldots,g_m}$, to obtain a representation of the form $$ \notag f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i) + \sum_{j=1}^m \beta_j g_j\,. $$ for $\alpha_1,\ldots,\alpha_n,\beta_1,\ldots,\beta_m \in \mathbb{R}$ that we could plug back into \eqref{eq:nonnegativeSVR}, resulting again in an explicit convex quadratic program. This is because then $P_{\mathscr{V}} f^* \in C^* $ whenever $f^* \in C^*$. In general, however, we have $P_{\mathscr{V}_{\text{data}}} f^* \notin C^* $ (i.e. the projection violates the constraints) even if $f^* \in C^* $ and this prohibits us to deduce any representer theorem in order to reduce \eqref{eq:nonnegativeSVR} to a finite-dimensional program. A clever idea to overcome the latter difficulty was introduced in [1] (note that the representer theorem in [1] is wrong). Instead of regressing by functions $f \in \mathscr{H}$ directly, one could also regress by functions of a structurally different form. In particular, the following model was proposed: $$ \label{eq:kernelSumOfSquares} f(x) = f_A(x) = \langle k(\cdot,x),A k(\cdot,x)\rangle \quad \text{for}\quad x \in X\,, $$ and some bounded operator $A \in \mathcal{L}(\mathscr{H})$. Clearly, if $A$ is a self-adjoint, positive operator (i.e. $A^* = A$ and $\langle g,Ag\rangle \geq 0$ for all $g \in \mathscr{H}$, written as $A \geq 0$), then $f$ will be nonnegative on $x \in X$. Then \eqref{eq:nonnegativeSVR} is replaced by $$ \begin{align} \label{eq:kSoSSVR} \mathop{\mathrm{argmin}}_{\substack{A \in \mathcal{L}(\mathscr{H}) \\ A^* = A \geq 0}} \frac{1}{2} \sum_{i=1}^n (y_i - f_A(x_i))^2 + \frac{\lambda}{2} \lVert A \rVert_{\mathrm{HS}}^2\,. \end{align} $$ Note how the regularization term $\lVert f \rVert_{\mathscr{H}}$ is changed to $\lVert A \rVert_{\mathrm{HS}}$ with $\lVert \cdot \rVert_{\mathrm{HS}}$ being the Hilbert-Schmidt norm of an operator. The reason for this is that now, $f_A$ does not necessarily belong to the RKHS $\mathscr{H}$. Now, in order that \eqref{eq:kSoSSVR} becomes tractable a similar theorem to the representer theorem is highly desirable. In [5] the following is shown:" />
+<meta property="og:description" content="In this short post I want to clarify how the recent “kernel Sum-of-Squares” (kSoS) technique introduced in [1] can be seen as a special case of the more established kernel regression. To start, I first repeat the classical kernel regression problem. Suppose that we have some data $x_1,\ldots,x_n \in X$ in some given set $X$ and corresponding values $y_1,\ldots,y_n \in \mathbb{R}$. We want to find an interpolant $f:X \to \mathbb{R}$ such that $y_i = f(x_i)$ for all $i=1,\ldots,n$. One common nonparametric approach is to assume that $f$ belongs to a so-called reproducing kernel Hilbert space (RKHS) $\mathscr{H}$, which is just a Hilbert space such that $\mathscr{H} \subseteq \mathbb{R}^X$ as a subspace and such that the linear forms $\operatorname{ev}_x:f \mapsto f(x)$ are continuous on $\mathscr{H}$. The (least square) regularized kernel regression problem [2,3,4], also known as support vector regression (SVR), is then stated as computing $$ \begin{align} \label{eq:classicalSVR} \mathop{\mathrm{argmin}}_{f \in \mathscr{H}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,. \end{align} $$ where $\lambda &gt; 0$ is a regularization parameter, which, similar to the Tikhonov regularization, punishes the “complexity” of $f$ measured by the RKHS norm $\lVert \cdot \rVert_{\mathscr{H}}$. Now, problem \eqref{eq:classicalSVR} is, even though $\mathscr{H}$ is generally infinite-dimensional, computationally tractable. Indeed, it is a straightforward consequence of the Riesz-Fischer theorem that there exists some unique function, called the kernel of $\mathscr{H}$, $k:X \times X \to \mathbb{R}$ such that $k(\cdot,x) \in \mathscr{H}$ and that $\langle f,k(\cdot,x)\rangle = f(x)$ for all $x \in X$ and $f \in \mathscr{H}$. Less straightforward, but not difficult to show, is the converse fact that every function $k:X \times X \to \mathbb{R}$ that is positive definite (i.e. $(k(z_i,z_j))_{i,j=1}^m$ is a p.s.d. matrix for all finite subsets $\{z_1,\ldots,z_m\} \subseteq X$) defines a unique RKHS $\mathscr{H} = \mathscr{H}_k$ with $k$ as kernel. Thus instead of describing the infinite-dimensional $\mathscr{H}$ we can just as well specify a kernel $k$ explicitly. The following celebrated theorem is then the cornerstone for the tractability of \eqref{eq:classicalSVR}: Representer Theorem The problem \eqref{eq:classicalSVR} has a unique solution $f^*$, which can be represented as $$ \begin{align} \label{eq:representerTheorem} f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i) \end{align} $$ for some $\alpha_1,\ldots,\alpha_n \in \mathbb{R}$. In other words: The minimizer $f^*$ lies in the finite-dimensional subspace $$ \notag \mathscr{V}_{\text{data}} = \mathscr{V}(\{x_1,\ldots,x_n\}) = \mathrm{span}\{k(\cdot,x_i) \mid i=1,\ldots,n\} $$ spanned by the data $x_1,\ldots,x_n$. This is hardly surprising from an optimization point of view, since introducing the additional variables $e_i = y_i - f(x_i) = y_i - \langle f,k(\cdot,x_i)\rangle$ yields $n$ constraints, to which there correspond $n$ variables in the Lagrangian dual problem. A more direct way to see the representer theorem is to orthogonally project any apparent minimizer $f^* \notin \mathscr{V}_{\text{data}}$ of \eqref{eq:classicalSVR} onto $\mathscr{V}_{\text{data}}$ and to note that this will strictly reduce the objective, since $\lVert P_{\mathscr{V}_{\text{data}}} f^* \rVert_{\mathscr{H}} &lt; \lVert f^* \rVert_{\mathscr{H}}$, but $$ \notag (P_{\mathscr{V}_{\text{data}}} f^*)(x_i) = \langle P_{\mathscr{V}_{\text{data}}} f^*,k(\cdot,x_i)\rangle = \langle f^*,P_{\mathscr{V}_{\text{data}}} k(\cdot,x_i)\rangle = \langle f^*, k(\cdot,x_i)\rangle = f^*(x_i)\,. $$ Now, plugging \eqref{eq:representerTheorem} into \eqref{eq:classicalSVR} results in a convex quadratic program that is readily solved by numerical methods, showing the tractability of \eqref{eq:classicalSVR}. Unfortunately the entire situation chances if we impose additional constraints on $f$ in \eqref{eq:classicalSVR}: Suppose, for instance, that we want to regress only with nonnegative functions (because e.g. we know that the true function is a probability density). This problem can now be stated as \begin{align} \label{eq:nonnegativeSVR} \mathop{\mathrm{argmin}}_{\substack{f \in \mathscr{H} \\ f(x) \geq 0 \; \forall x \in X}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,. \end{align} The difference of \eqref{eq:nonnegativeSVR} to \eqref{eq:classicalSVR} is the convex constraint $f(x) \geq 0$ for all $x \in X$. However, this constraint is semi-infinite, since $X$ is generally infinite (e.g. $X = \mathbb{R}^d$). Notice that we can rewrite the latter constraint as $$ \notag f \in C^* \quad \text{where} \quad C = \operatorname{cone}\{k(\cdot,x) \mid x \in X\}\,, $$ where $\operatorname{cone}$ denotes the closed, convex, conic hull and $C^* = \{f \in \mathscr{H} \mid \langle f,g\rangle \geq 0 \; \forall g \in \mathscr{H}\}$ is the dual cone of $C$. The main difficulty is that $C$ is, in general, not finitely generated and is not contained in a finite-dimensional subspace of $\mathscr{H}$: Indeed, if we had $C = \mathrm{cone}\{g_1,\ldots,g_m\}$ for some explicitly known, finite set $g_1,\ldots,g_m \in \mathscr{H}$, then we could mimic the proof of the representer theorem by projecting $f^*$ onto the subspace $$ \notag \mathscr{V} = \mathscr{V}_{\text{data}} \lor \mathscr{V}_{\text{constr}} $$ with $\mathscr{V}_{\text{constr}} = \mathrm{span}{g_1,\ldots,g_m}$, to obtain a representation of the form $$ \notag f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i) + \sum_{j=1}^m \beta_j g_j\,. $$ for $\alpha_1,\ldots,\alpha_n,\beta_1,\ldots,\beta_m \in \mathbb{R}$ that we could plug back into \eqref{eq:nonnegativeSVR}, resulting again in an explicit convex quadratic program. This is because then $P_{\mathscr{V}} f^* \in C^* $ whenever $f^* \in C^*$. In general, however, we have $P_{\mathscr{V}_{\text{data}}} f^* \notin C^* $ (i.e. the projection violates the constraints) even if $f^* \in C^* $ and this prohibits us to deduce any representer theorem in order to reduce \eqref{eq:nonnegativeSVR} to a finite-dimensional program. A clever idea to overcome the latter difficulty was introduced in [1] (note that the representer theorem in [1] is wrong). Instead of regressing by functions $f \in \mathscr{H}$ directly, one could also regress by functions of a structurally different form. In particular, the following model was proposed: $$ \label{eq:kernelSumOfSquares} f(x) = f_A(x) = \langle k(\cdot,x),A k(\cdot,x)\rangle \quad \text{for}\quad x \in X\,, $$ and some bounded operator $A \in \mathcal{L}(\mathscr{H})$. Clearly, if $A$ is a self-adjoint, positive operator (i.e. $A^* = A$ and $\langle g,Ag\rangle \geq 0$ for all $g \in \mathscr{H}$, written as $A \geq 0$), then $f$ will be nonnegative on $x \in X$. Then \eqref{eq:nonnegativeSVR} is replaced by $$ \begin{align} \label{eq:kSoSSVR} \mathop{\mathrm{argmin}}_{\substack{A \in \mathcal{L}(\mathscr{H}) \\ A^* = A \geq 0}} \frac{1}{2} \sum_{i=1}^n (y_i - f_A(x_i))^2 + \frac{\lambda}{2} \lVert A \rVert_{\mathrm{HS}}^2\,. \end{align} $$ Note how the regularization term $\lVert f \rVert_{\mathscr{H}}$ is changed to $\lVert A \rVert_{\mathrm{HS}}$ with $\lVert \cdot \rVert_{\mathrm{HS}}$ being the Hilbert-Schmidt norm of an operator. The reason for this is that now, $f_A$ does not necessarily belong to the RKHS $\mathscr{H}$. Now, in order that \eqref{eq:kSoSSVR} becomes tractable a similar theorem to the representer theorem is highly desirable. In [5] the following is shown:" />
+<link rel="canonical" href="http://localhost:4000/posts/2024/03/30/kSoS.html" />
+<meta property="og:url" content="http://localhost:4000/posts/2024/03/30/kSoS.html" />
+<meta property="og:site_name" content="KYP Diary" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-30T15:19:57+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Kernel sum of squares as regression in RKHS" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"CompleteMetricSpace"},"dateModified":"2024-03-30T15:19:57+01:00","datePublished":"2024-03-30T15:19:57+01:00","description":"In this short post I want to clarify how the recent “kernel Sum-of-Squares” (kSoS) technique introduced in [1] can be seen as a special case of the more established kernel regression. To start, I first repeat the classical kernel regression problem. Suppose that we have some data $x_1,\\ldots,x_n \\in X$ in some given set $X$ and corresponding values $y_1,\\ldots,y_n \\in \\mathbb{R}$. We want to find an interpolant $f:X \\to \\mathbb{R}$ such that $y_i = f(x_i)$ for all $i=1,\\ldots,n$. One common nonparametric approach is to assume that $f$ belongs to a so-called reproducing kernel Hilbert space (RKHS) $\\mathscr{H}$, which is just a Hilbert space such that $\\mathscr{H} \\subseteq \\mathbb{R}^X$ as a subspace and such that the linear forms $\\operatorname{ev}_x:f \\mapsto f(x)$ are continuous on $\\mathscr{H}$. The (least square) regularized kernel regression problem [2,3,4], also known as support vector regression (SVR), is then stated as computing $$ \\begin{align} \\label{eq:classicalSVR} \\mathop{\\mathrm{argmin}}_{f \\in \\mathscr{H}} \\frac{1}{2} \\sum_{i=1}^n (y_i - f(x_i))^2 + \\frac{\\lambda}{2} \\lVert f \\rVert_{\\mathscr{H}}^2\\,. \\end{align} $$ where $\\lambda &gt; 0$ is a regularization parameter, which, similar to the Tikhonov regularization, punishes the “complexity” of $f$ measured by the RKHS norm $\\lVert \\cdot \\rVert_{\\mathscr{H}}$. Now, problem \\eqref{eq:classicalSVR} is, even though $\\mathscr{H}$ is generally infinite-dimensional, computationally tractable. Indeed, it is a straightforward consequence of the Riesz-Fischer theorem that there exists some unique function, called the kernel of $\\mathscr{H}$, $k:X \\times X \\to \\mathbb{R}$ such that $k(\\cdot,x) \\in \\mathscr{H}$ and that $\\langle f,k(\\cdot,x)\\rangle = f(x)$ for all $x \\in X$ and $f \\in \\mathscr{H}$. Less straightforward, but not difficult to show, is the converse fact that every function $k:X \\times X \\to \\mathbb{R}$ that is positive definite (i.e. $(k(z_i,z_j))_{i,j=1}^m$ is a p.s.d. matrix for all finite subsets $\\{z_1,\\ldots,z_m\\} \\subseteq X$) defines a unique RKHS $\\mathscr{H} = \\mathscr{H}_k$ with $k$ as kernel. Thus instead of describing the infinite-dimensional $\\mathscr{H}$ we can just as well specify a kernel $k$ explicitly. The following celebrated theorem is then the cornerstone for the tractability of \\eqref{eq:classicalSVR}: Representer Theorem The problem \\eqref{eq:classicalSVR} has a unique solution $f^*$, which can be represented as $$ \\begin{align} \\label{eq:representerTheorem} f^* = \\sum_{i=1}^n \\alpha_i k(\\cdot,x_i) \\end{align} $$ for some $\\alpha_1,\\ldots,\\alpha_n \\in \\mathbb{R}$. In other words: The minimizer $f^*$ lies in the finite-dimensional subspace $$ \\notag \\mathscr{V}_{\\text{data}} = \\mathscr{V}(\\{x_1,\\ldots,x_n\\}) = \\mathrm{span}\\{k(\\cdot,x_i) \\mid i=1,\\ldots,n\\} $$ spanned by the data $x_1,\\ldots,x_n$. This is hardly surprising from an optimization point of view, since introducing the additional variables $e_i = y_i - f(x_i) = y_i - \\langle f,k(\\cdot,x_i)\\rangle$ yields $n$ constraints, to which there correspond $n$ variables in the Lagrangian dual problem. A more direct way to see the representer theorem is to orthogonally project any apparent minimizer $f^* \\notin \\mathscr{V}_{\\text{data}}$ of \\eqref{eq:classicalSVR} onto $\\mathscr{V}_{\\text{data}}$ and to note that this will strictly reduce the objective, since $\\lVert P_{\\mathscr{V}_{\\text{data}}} f^* \\rVert_{\\mathscr{H}} &lt; \\lVert f^* \\rVert_{\\mathscr{H}}$, but $$ \\notag (P_{\\mathscr{V}_{\\text{data}}} f^*)(x_i) = \\langle P_{\\mathscr{V}_{\\text{data}}} f^*,k(\\cdot,x_i)\\rangle = \\langle f^*,P_{\\mathscr{V}_{\\text{data}}} k(\\cdot,x_i)\\rangle = \\langle f^*, k(\\cdot,x_i)\\rangle = f^*(x_i)\\,. $$ Now, plugging \\eqref{eq:representerTheorem} into \\eqref{eq:classicalSVR} results in a convex quadratic program that is readily solved by numerical methods, showing the tractability of \\eqref{eq:classicalSVR}. Unfortunately the entire situation chances if we impose additional constraints on $f$ in \\eqref{eq:classicalSVR}: Suppose, for instance, that we want to regress only with nonnegative functions (because e.g. we know that the true function is a probability density). This problem can now be stated as \\begin{align} \\label{eq:nonnegativeSVR} \\mathop{\\mathrm{argmin}}_{\\substack{f \\in \\mathscr{H} \\\\ f(x) \\geq 0 \\; \\forall x \\in X}} \\frac{1}{2} \\sum_{i=1}^n (y_i - f(x_i))^2 + \\frac{\\lambda}{2} \\lVert f \\rVert_{\\mathscr{H}}^2\\,. \\end{align} The difference of \\eqref{eq:nonnegativeSVR} to \\eqref{eq:classicalSVR} is the convex constraint $f(x) \\geq 0$ for all $x \\in X$. However, this constraint is semi-infinite, since $X$ is generally infinite (e.g. $X = \\mathbb{R}^d$). Notice that we can rewrite the latter constraint as $$ \\notag f \\in C^* \\quad \\text{where} \\quad C = \\operatorname{cone}\\{k(\\cdot,x) \\mid x \\in X\\}\\,, $$ where $\\operatorname{cone}$ denotes the closed, convex, conic hull and $C^* = \\{f \\in \\mathscr{H} \\mid \\langle f,g\\rangle \\geq 0 \\; \\forall g \\in \\mathscr{H}\\}$ is the dual cone of $C$. The main difficulty is that $C$ is, in general, not finitely generated and is not contained in a finite-dimensional subspace of $\\mathscr{H}$: Indeed, if we had $C = \\mathrm{cone}\\{g_1,\\ldots,g_m\\}$ for some explicitly known, finite set $g_1,\\ldots,g_m \\in \\mathscr{H}$, then we could mimic the proof of the representer theorem by projecting $f^*$ onto the subspace $$ \\notag \\mathscr{V} = \\mathscr{V}_{\\text{data}} \\lor \\mathscr{V}_{\\text{constr}} $$ with $\\mathscr{V}_{\\text{constr}} = \\mathrm{span}{g_1,\\ldots,g_m}$, to obtain a representation of the form $$ \\notag f^* = \\sum_{i=1}^n \\alpha_i k(\\cdot,x_i) + \\sum_{j=1}^m \\beta_j g_j\\,. $$ for $\\alpha_1,\\ldots,\\alpha_n,\\beta_1,\\ldots,\\beta_m \\in \\mathbb{R}$ that we could plug back into \\eqref{eq:nonnegativeSVR}, resulting again in an explicit convex quadratic program. This is because then $P_{\\mathscr{V}} f^* \\in C^* $ whenever $f^* \\in C^*$. In general, however, we have $P_{\\mathscr{V}_{\\text{data}}} f^* \\notin C^* $ (i.e. the projection violates the constraints) even if $f^* \\in C^* $ and this prohibits us to deduce any representer theorem in order to reduce \\eqref{eq:nonnegativeSVR} to a finite-dimensional program. A clever idea to overcome the latter difficulty was introduced in [1] (note that the representer theorem in [1] is wrong). Instead of regressing by functions $f \\in \\mathscr{H}$ directly, one could also regress by functions of a structurally different form. In particular, the following model was proposed: $$ \\label{eq:kernelSumOfSquares} f(x) = f_A(x) = \\langle k(\\cdot,x),A k(\\cdot,x)\\rangle \\quad \\text{for}\\quad x \\in X\\,, $$ and some bounded operator $A \\in \\mathcal{L}(\\mathscr{H})$. Clearly, if $A$ is a self-adjoint, positive operator (i.e. $A^* = A$ and $\\langle g,Ag\\rangle \\geq 0$ for all $g \\in \\mathscr{H}$, written as $A \\geq 0$), then $f$ will be nonnegative on $x \\in X$. Then \\eqref{eq:nonnegativeSVR} is replaced by $$ \\begin{align} \\label{eq:kSoSSVR} \\mathop{\\mathrm{argmin}}_{\\substack{A \\in \\mathcal{L}(\\mathscr{H}) \\\\ A^* = A \\geq 0}} \\frac{1}{2} \\sum_{i=1}^n (y_i - f_A(x_i))^2 + \\frac{\\lambda}{2} \\lVert A \\rVert_{\\mathrm{HS}}^2\\,. \\end{align} $$ Note how the regularization term $\\lVert f \\rVert_{\\mathscr{H}}$ is changed to $\\lVert A \\rVert_{\\mathrm{HS}}$ with $\\lVert \\cdot \\rVert_{\\mathrm{HS}}$ being the Hilbert-Schmidt norm of an operator. The reason for this is that now, $f_A$ does not necessarily belong to the RKHS $\\mathscr{H}$. Now, in order that \\eqref{eq:kSoSSVR} becomes tractable a similar theorem to the representer theorem is highly desirable. In [5] the following is shown:","headline":"Kernel sum of squares as regression in RKHS","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/posts/2024/03/30/kSoS.html"},"url":"http://localhost:4000/posts/2024/03/30/kSoS.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="KYP Diary" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">KYP Diary</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about.html">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Kernel sum of squares as regression in RKHS</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-03-30T15:19:57+01:00" itemprop="datePublished">
+        Mar 30, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <span style="display:none;">
+    $\newcommand\mynewcommand[1]{\let#1\relax\newcommand#1}
+	%Umlauts for German writing
+	\mynewcommand{\a}{\"a}
+	\mynewcommand{\u}{\"u}
+	\mynewcommand{\o}{\"o}
+	\mynewcommand{\A}{\"A}
+	\mynewcommand{\O}{\"O}
+	\mynewcommand{\U}{\"U}
+
+	%Different (math) fonts
+	\mynewcommand{\f}[1]{\mathfrak{#1}}
+	\mynewcommand{\c}[1]{\mathcal{#1}}
+	\mynewcommand{\b}[1]{\mathbb{#1}}
+	\mynewcommand{\bf}[1]{\bm{#1}}
+	%\mynewcommand{\s}[1]{\mathcal{#1}}
+	\mynewcommand{\s}[1]{\mathscr{#1}}
+	\mynewcommand{\bs}[1]{\boldsymbol{#1}}
+
+	%General math notation
+	\mynewcommand{\im}{\text{im}\;}
+	\mynewcommand{\id}{\text{id}}
+	\mynewcommand{\leq}{\leqslant}
+	\mynewcommand{\geq}{\geqslant}
+	\mynewcommand{\bar}[1]{\overline{#1}}
+	\let\shat\hat
+	\mynewcommand{\hat}[1]{\widehat{#1}}
+	\mynewcommand{\tilde}[1]{\widetilde{#1}}
+	\mynewcommand{\ts}{\otimes}
+	\mynewcommand{\vec}[1]{\overrightarrow{#1}}
+	\DeclareMathOperator{\supp}{supp}     
+	\mynewcommand\mapsfrom{\mathrel{\reflectbox{\ensuremath{\mapsto}}}}        
+	\mynewcommand{\intg}[3]{\int_{#1} #2 \,\text{d}#3}
+	\mynewcommand{\intb}[4]{\int_{#1}^{#2} #3 \,\text{d}#4}
+	\mynewcommand{\ointg}[3]{\oint_{#1} #2 \,\text{d}#3}
+	\mynewcommand{\ointb}[4]{\oint_{#1}^{#2} #3 \,\text{d}#4}
+	\mynewcommand{\R}{\mathrm{R}}
+	\mynewcommand{\N}{\mathrm{N}}
+	\mynewcommand{\eps}{\varepsilon}
+	\mynewcommand{\phi}{\varphi}
+	\mynewcommand{\-}{\text{-}}
+	\mynewcommand{\Re}{\mathrm{Re}}
+	\mynewcommand{\Im}{\mathrm{Im}}
+	\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+	\DeclareMathOperator*{\esssup}{ess\,sup}
+	\mynewcommand{\conj}[1]{\f{conj}(#1)}
+	\mynewcommand{\indset}[2]{[#1,#2\rangle}
+	\DeclareMathOperator{\ct}{\mathcal{c}}
+	\DeclareMathOperator{\clos}{clos}
+	\DeclareMathOperator{\slim}{s-lim}
+	\DeclareMathOperator{\conv}{conv}
+	\DeclareMathOperator{\cconv}{\bar{\conv}}
+	\DeclareMathOperator{\ext}{ext}
+
+	%Functional Analysis
+
+	\DeclarePairedDelimiter{\ipr}{\langle}{\rangle}
+	\mynewcommand{\sc}{\langle \cdot,\cdot\rangle}
+	\mynewcommand{\pr}{\text{pr}\,}
+	\mynewcommand{\Def}{\text{Def}}
+	\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+	%\mynewcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+
+	%Probability Theory
+	\mynewcommand{\1}{\mathbbm{1}}
+	\mynewcommand{\E}{\mathbb{E}}
+	\DeclareMathOperator{\Var}{Var}
+	\mynewcommand{\Ber}{\text{Ber}}
+
+	\newtheorem{theorem}{Theorem}
+	\newtheorem{lemma}{Lemma}
+	\newtheorem{corollary}[theorem]{Corollary}
+	\newtheorem{defn}[theorem]{Definition}
+	\newtheorem{example}[theorem]{Example}
+	\newtheorem{remark}[theorem]{Remark}
+
+	\newcommand{\mat}[1]{\left(\begin{matrix}#1\end{matrix}\right)}
+	\newcommand{\smat}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+	\newcommand{\rmat}[1]{\begin{matrix}#1\end{matrix}}
+     $</span> 
+    <p>In this short post I want to clarify how the recent “kernel Sum-of-Squares” (kSoS) technique introduced in <span>[1]</span> can be seen as a special case of the more established kernel regression.
+To start, I first repeat the classical kernel regression problem.
+Suppose that we have some data <span>$x_1,\ldots,x_n \in X$</span> in some given set $X$ and corresponding values <span>$y_1,\ldots,y_n \in \mathbb{R}$</span>.
+We want to find an interpolant <span>$f:X \to \mathbb{R}$</span> such that <span>$y_i = f(x_i)$</span> for all <span>$i=1,\ldots,n$</span>.
+One common nonparametric approach is to assume that <span>$f$</span> belongs to a so-called reproducing kernel Hilbert space (RKHS) <span>$\mathscr{H}$</span>, which is just a Hilbert space such that <span>$\mathscr{H} \subseteq \mathbb{R}^X$</span> as a subspace and such that the linear forms <span>$\operatorname{ev}_x:f \mapsto f(x)$</span> are continuous on <span>$\mathscr{H}$</span>.
+The (least square) regularized kernel regression problem <span>[2,3,4]</span>, also known as support vector regression (SVR), is then stated as computing</p>
+<div>
+$$
+\begin{align}
+	\label{eq:classicalSVR}
+	\mathop{\mathrm{argmin}}_{f \in \mathscr{H}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,.
+\end{align}
+$$
+</div>
+<p>where <span>$\lambda &gt; 0$</span> is a regularization parameter, which, similar to the Tikhonov regularization, punishes the “complexity” of <span>$f$</span> measured by the RKHS norm <span>$\lVert \cdot \rVert_{\mathscr{H}}$</span>.
+Now, problem <span>\eqref{eq:classicalSVR}</span> is, even though <span>$\mathscr{H}$</span> is generally infinite-dimensional, computationally tractable.
+Indeed, it is a straightforward consequence of the Riesz-Fischer theorem that there exists some unique function, called the kernel of <span>$\mathscr{H}$</span>, <span>$k:X \times X \to \mathbb{R}$</span> such that <span>$k(\cdot,x) \in \mathscr{H}$</span> and that <span>$\langle f,k(\cdot,x)\rangle = f(x)$</span> for all <span>$x \in X$</span> and <span>$f \in \mathscr{H}$</span>.
+Less straightforward, but not difficult to show, is the converse fact that every function <span>$k:X \times X \to \mathbb{R}$</span> that is positive definite (i.e. <span>$(k(z_i,z_j))_{i,j=1}^m$</span> is a p.s.d. matrix for all finite subsets <span>$\{z_1,\ldots,z_m\} \subseteq X$</span>) defines a unique RKHS <span>$\mathscr{H} = \mathscr{H}_k$</span> with $k$ as kernel.
+Thus instead of describing the infinite-dimensional <span>$\mathscr{H}$</span> we can just as well specify a kernel <span>$k$</span> explicitly.
+The following celebrated theorem is then the cornerstone for the tractability of <span>\eqref{eq:classicalSVR}</span>:
+<!--\label{thm:representerTheorem} --></p>
+<div id="thm:representerTheorem">
+<b>Representer Theorem </b>
+The problem <span>\eqref{eq:classicalSVR}</span> has a unique solution <span>$f^*$</span>, which can be represented as
+<div>
+$$	
+\begin{align}
+	\label{eq:representerTheorem}
+	f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i)
+\end{align}
+$$
+</div>
+for some <span>$\alpha_1,\ldots,\alpha_n \in \mathbb{R}$</span>.
+</div>
+<p><br />
+In other words: The minimizer <span>$f^*$</span> lies in the finite-dimensional subspace</p>
+<div>
+$$ \notag
+	\mathscr{V}_{\text{data}} = \mathscr{V}(\{x_1,\ldots,x_n\}) = \mathrm{span}\{k(\cdot,x_i) \mid i=1,\ldots,n\}
+$$
+</div>
+<p>spanned by the data <span>$x_1,\ldots,x_n$</span>.
+This is hardly surprising from an optimization point of view, since introducing the additional variables <span>$e_i = y_i - f(x_i) = y_i - \langle f,k(\cdot,x_i)\rangle$</span> yields <span>$n$</span> constraints, to which there correspond $n$ variables in the Lagrangian dual problem.
+A more direct way to see the <a href="#thm:representerTheorem">representer theorem</a> is to orthogonally project any apparent minimizer <span>$f^* \notin \mathscr{V}_{\text{data}}$</span> of <span>\eqref{eq:classicalSVR}</span> onto <span>$\mathscr{V}_{\text{data}}$</span> and to note that this will strictly reduce the objective, since <span>$\lVert P_{\mathscr{V}_{\text{data}}} f^* \rVert_{\mathscr{H}} &lt; \lVert f^* \rVert_{\mathscr{H}}$</span>, but</p>
+<div>
+$$ \notag
+(P_{\mathscr{V}_{\text{data}}} f^*)(x_i) = \langle P_{\mathscr{V}_{\text{data}}} f^*,k(\cdot,x_i)\rangle = \langle f^*,P_{\mathscr{V}_{\text{data}}} k(\cdot,x_i)\rangle = \langle f^*, k(\cdot,x_i)\rangle = f^*(x_i)\,.
+$$
+</div>
+<p>Now, plugging <span>\eqref{eq:representerTheorem}</span> into <span>\eqref{eq:classicalSVR}</span> results in a convex quadratic program that is readily solved by numerical methods, showing the tractability of <span>\eqref{eq:classicalSVR}</span>.
+<br />
+Unfortunately the entire situation chances if we impose additional constraints on <span>$f$</span> in <span>\eqref{eq:classicalSVR}</span>:
+Suppose, for instance, that we want to regress only with nonnegative functions (because e.g. we know that the true function is a probability density).
+This problem can now be stated as</p>
+<div>
+\begin{align}
+	\label{eq:nonnegativeSVR}
+	\mathop{\mathrm{argmin}}_{\substack{f \in \mathscr{H} \\ f(x) \geq 0 \; \forall x \in X}} \frac{1}{2} \sum_{i=1}^n (y_i - f(x_i))^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2\,.
+\end{align}
+</div>
+<p>The difference of <span>\eqref{eq:nonnegativeSVR}</span> to <span>\eqref{eq:classicalSVR}</span> is the convex constraint <span>$f(x) \geq 0$</span> for all <span>$x \in X$</span>.
+However, this constraint is semi-infinite, since <span>$X$</span> is generally infinite (e.g. <span>$X = \mathbb{R}^d$</span>).
+Notice that we can rewrite the latter constraint as</p>
+<div>
+$$ \notag
+	f \in C^* \quad \text{where} \quad C = \operatorname{cone}\{k(\cdot,x) \mid x \in X\}\,,
+$$
+</div>
+<p>where <span>$\operatorname{cone}$</span> denotes the closed, convex, conic hull and <span>$C^* = \{f \in \mathscr{H} \mid \langle f,g\rangle \geq 0 \; \forall g \in \mathscr{H}\}$</span> is the dual cone of <span>$C$</span>.
+The main difficulty is that <span>$C$</span> is, in general, not finitely generated and is not contained in a finite-dimensional subspace of <span>$\mathscr{H}$</span>:
+Indeed, if we had <span>$C = \mathrm{cone}\{g_1,\ldots,g_m\}$</span> for some explicitly known, finite set <span>$g_1,\ldots,g_m \in \mathscr{H}$</span>, then we could mimic the proof of the <a href="#thm:representerTheorem">representer theorem</a> by projecting <span>$f^*$</span> onto the subspace</p>
+<div>
+$$ \notag
+	\mathscr{V} = \mathscr{V}_{\text{data}} \lor \mathscr{V}_{\text{constr}}
+$$
+</div>
+<p>with <span>$\mathscr{V}_{\text{constr}} = \mathrm{span}{g_1,\ldots,g_m}$</span>, to obtain a representation of the form</p>
+<div>
+$$ \notag
+	f^* = \sum_{i=1}^n \alpha_i k(\cdot,x_i) + \sum_{j=1}^m \beta_j g_j\,.
+$$
+</div>
+<p>for <span>$\alpha_1,\ldots,\alpha_n,\beta_1,\ldots,\beta_m \in \mathbb{R}$</span> that we could plug back into <span>\eqref{eq:nonnegativeSVR}</span>, resulting again in an explicit convex quadratic program.
+This is because then <span>$P_{\mathscr{V}} f^* \in C^* $</span> whenever <span>$f^* \in C^*$</span>.
+In general, however, we have <span>$P_{\mathscr{V}_{\text{data}}} f^* \notin C^* $</span> (i.e. the projection violates the constraints) even if <span>$f^* \in C^* $</span> and this prohibits us to deduce any representer theorem in order to reduce <span>\eqref{eq:nonnegativeSVR}</span> to a finite-dimensional program.
+<br />
+A clever idea to overcome the latter difficulty was introduced in [1] (note that the representer theorem in [1] is wrong).
+Instead of regressing by functions <span>$f \in \mathscr{H}$</span> directly, one could also regress by functions of a structurally different form.
+In particular, the following model was proposed:</p>
+<div>
+$$ 
+	\label{eq:kernelSumOfSquares}
+	f(x) = f_A(x) = \langle k(\cdot,x),A k(\cdot,x)\rangle \quad \text{for}\quad x \in X\,,
+$$
+</div>
+<p>and some bounded operator <span>$A \in \mathcal{L}(\mathscr{H})$</span>.
+Clearly, if <span>$A$</span> is a self-adjoint, positive operator (i.e. <span>$A^* = A$</span> and <span>$\langle g,Ag\rangle \geq 0$</span> for all <span>$g \in \mathscr{H}$</span>, written as <span>$A \geq 0$</span>), then <span>$f$</span> will be nonnegative on <span>$x \in X$</span>.
+Then <span>\eqref{eq:nonnegativeSVR}</span> is replaced by</p>
+<div>
+$$ 
+\begin{align}
+	\label{eq:kSoSSVR}
+	\mathop{\mathrm{argmin}}_{\substack{A \in \mathcal{L}(\mathscr{H}) \\ A^* = A \geq 0}} \frac{1}{2} \sum_{i=1}^n (y_i - f_A(x_i))^2 + \frac{\lambda}{2} \lVert A \rVert_{\mathrm{HS}}^2\,.
+\end{align}
+$$
+</div>
+<p>Note how the regularization term <span>$\lVert f \rVert_{\mathscr{H}}$</span> is changed to <span>$\lVert A \rVert_{\mathrm{HS}}$</span> with <span>$\lVert \cdot \rVert_{\mathrm{HS}}$</span> being the Hilbert-Schmidt norm of an operator.
+The reason for this is that now, <span>$f_A$</span> does not necessarily belong to the RKHS <span>$\mathscr{H}$</span>.
+Now, in order that <span>\eqref{eq:kSoSSVR}</span> becomes tractable a similar theorem to the <a href="#thm:representerTheorem">representer theorem</a> is highly desirable. 
+In <span>[5]</span> the following is shown:</p>
+
+<div id="thm:representerTheoremkSoS">
+<b>Representer Theorem (kSoS)</b>
+The problem <span>\eqref{eq:kSoSSVR}</span> has a unique minimizer <span>$A_*$</span>, which is a finite rank operator and of the form
+<div>	
+$$
+\begin{align}
+	\label{eq:finiteRank}
+	A_* = \sum_{i,j=1}^n b_{ij} (k(\cdot,x_i) \otimes k(\cdot,x_j))\,,
+\end{align}
+$$
+</div>
+for some positive semi-definite <span>$B = (b_{ij})_{i,j=1}^n \in \mathbb{S}_+^{n \times n}$</span>.
+</div>
+<p><br /><br />
+In other words, the minimizer is contained in the finite-dimensional subspace</p>
+<div>
+$$  \notag
+	\mathscr{W}_{\mathrm{data}} = \mathrm{span}\{k(\cdot,x_i) \otimes k(\cdot,x_j) \mid i,j=1,\ldots,n\}
+$$
+</div>
+<p>of <span>$\mathcal{L}(\mathscr{H})$ spanned by the data ${x_1,\ldots,x_n}$</span>. 
+Once again, plugging <span>\eqref{eq:finiteRank}</span> into <span>\eqref{eq:kSoSSVR}</span> results in a semi-definite program (SDP) that can be solved by modern numerical methods.
+<br />
+In view of the similarity of the approaches an interesting and, in <span>[5]</span>, not well-explored question is how <span>\eqref{eq:classicalSVR}</span> and <span>\eqref{eq:kSoSSVR}</span> are related.
+In the following we want to argue that indeed <span>\eqref{eq:kSoSSVR}</span> is (up to isomorphism) a special case of <span>\eqref{eq:classicalSVR}</span> and that the <a href="#thm:representerTheoremkSoS">kSoS representer theorem</a> can be deduced in the same way as the <a href="#thm:representerTheorem">orignal representer theorem</a> by a minor modification of the proof, which is in itself an interesting observation that lies in the heart of the error made in <span>[1]</span>.
+For this purpose note that if <span>$A$</span> is Hilbert-Schmidt</p>
+<div>
+$$ \notag
+	f_A(x)
+	= \mathrm{tr}(A(k(\cdot,x) \otimes k(\cdot,x)))
+	= \langle A,k(\cdot,x) \otimes k(\cdot,x)\rangle_{\mathrm{HS(\mathscr{H})}}\,,
+$$
+</div>
+<p>where <span>$\mathrm{HS(\mathscr{H})}$</span> is the Hilbert space of all Hilbert-Schmidt operators on <span>$\mathscr{H}$</span>.
+This simple observation also allows as to futher motivate the name of the representation \eqref{eq:kernelSumOfSquares}:
+Namely, if we set out to learn $f$ as the sum of squares of functions $g_1,\ldots,g_m \in \mathscr{H}$ we obtain</p>
+<div>
+\begin{align*}
+	f(x) = \sum_{i=1}^m g_i(x)^2 = \sum_{i=1}^m \langle g_i, k(\cdot,x)\rangle^2 = \langle \sum_{i=1}^m (g_i \otimes g_i), k(\cdot,x) \otimes k(\cdot,x)\rangle\,,
+\end{align*}
+</div>
+<p>i.e. the representation \eqref{eq:kernelSumOfSquares} follows from the observation that each Hilbert-Schmidt operator $A$ is compact and can be approximated by a finite sum of rank-one operators arbitrarily well in the operator norm.
+Now, it is a classical result that <span>$\mathrm{HS}(\mathscr{H}) \cong \mathscr{H} \otimes \mathscr{H}$</span> as Hilbert spaces and that <span>$\mathscr{H} \otimes \mathscr{H} \cong \mathscr{G}$</span>, where <span>$\mathscr{G}$</span> is the RKHS corresponding to the kernel <span>$\bar{k}((x,z),(x’,z’)) = k(x,x’)k(z,z’)$</span> <span>[2, Lemma 4.6]</span>. 
+If we define</p>
+<div>
+$$ \notag
+	\Psi:X \times X \to \mathrm{HS(\mathscr{H})}: (x,z) \mapsto k(\cdot,x) \otimes k(\cdot,z)\,,
+$$
+</div>
+<p>then clearly</p>
+<div>
+$$ \notag
+	\langle \Psi(x,z),\Psi(x',z')\rangle
+	= k(x,x')k(z,z')
+	= \bar{k}((x,z),(x',z'))
+$$
+</div>
+<p>and hence <span>$\Psi$</span> is a feature map of <span>$\bar{k}$</span>.
+More precisely, if <span>$U:\mathrm{HS}(\mathscr{H}) \to \mathscr{G}$</span> is the canonical isomorphism, then it is not hard to see that</p>
+<div>
+$$
+\notag
+	\Psi(x,z) = U^{-1} \bar{k}(\cdot,(x,z)) \quad \text{for all} \quad (x,z) \in X \times X\,.
+$$
+<div>
+Hence <span>$\mathrm{span}\{\Psi(x,z) \mid (x,z) \in X \times X\}$</span> is dense in <span>$\mathrm{HS(\mathscr{H})}$</span> and <span>$\Phi$</span> is, up to isomorphism, the canonical feature map of <span>$\bar{k}$</span> and that we can treat <span>$\mathrm{HS}(\mathscr{H})$</span> as well as an RKHS.
+Rewriting <span>\eqref{eq:classicalSVR}</span> and <span>\eqref{eq:kSoSSVR}</span> in terms of feature maps <span>$\psi(x) = k(\cdot,x)$</span> and <span>$\Psi$</span> we see that 
+<div>
+$$ \notag
+\begin{align*}
+	\text{\eqref{eq:classicalSVR}} &amp;\Longleftrightarrow \mathop{\mathrm{argmin}}_{f \in \mathscr{H}} \frac{1}{2} \sum_{i=1}^n (y_i - \langle f,\psi(x_i)\rangle_{\mathscr{H}})^2 + \frac{\lambda}{2} \lVert f \rVert_{\mathscr{H}}^2 \\
+	\text{\eqref{eq:kSoSSVR}} &amp;\Longleftrightarrow \mathop{\mathrm{argmin}}_{\substack{A \in \mathrm{HS}(\mathscr{H}) \\ A^* = A \geq 0}} \frac{1}{2} \sum_{i=1}^n (y_i - \langle A,\Psi(x_i,x_i)\rangle_{\mathrm{HS}(\mathscr{H})})^2 + \frac{\lambda}{2} \lVert A\rVert_{\mathrm{HS}(\mathscr{H})}^2\,.
+\end{align*}
+$$
+</div>
+Thus in the first case the data appears to be <span>$\{x_1,\ldots,x_n\} \subseteq X$</span> and in the second case <span>$\{(x_1,x_1),\ldots,(x_n,x_n)\} \subseteq X \times X$</span>.
+However, one difference is the convex, conic constraint <span>$A^* = A \geq 0$</span> in <span>\eqref{eq:kSoSSVR}</span> that is absent in <span>\eqref{eq:classicalSVR}</span>.
+If it were not for this constraint, then, to show the representer theorem for <span>\eqref{eq:kSoSSVR}</span> we could simply project the apparent minimizer <span>$A_*$</span> onto the subspace
+<div>
+$$ \notag
+	\tilde{\mathscr{W}}_{\text{data}} = \mathrm{span}\{\Psi(x_i,x_i) \mid i=1,\ldots,n\}\,.
+$$ 
+</div>
+However even if <span>$A_* = A_*^* \geq 0$</span>, there is no reason why the projection <span>$P_{\tilde{\mathscr{W}}_{\text{data}}} A_* $</span> should continue to satisfy this requirement.
+Indeed, this is the error made in <span>[1]</span>, which derived a representation <span>\eqref{eq:finiteRank}</span> with <span>$b_{ij} = 0$</span> for all <span>$i \neq j$</span>, i.e. in <span>[1]</span> is was claimed that <span>$A\_*$</span> is contained in the subspace <span>$\tilde{\mathscr{W}}_{\text{data}} \subsetneq \mathscr{W}_{\text{data}}$</span>.
+This was refuted in [5] and indeed we can prove the following  
+<br /><br />
+<div id="thm:projectionPSDOperator">
+ <b> Lemma </b> 
+Let <span>$\mathscr{H}$</span> be a real Hilbert space and let <span>$\mathrm{HS}(\mathscr{H})$</span> denote the Hilbert space of Hilbert-Schmidt operators on <span>$\mathscr{H}$</span> with the inner product <span>$\langle A,B\rangle_{\mathrm{HS}(\mathscr{H})} = \mathrm{tr}(B^*A)$</span>.
+Let <span>$f_1,\ldots,f_n \in \mathscr{H}$</span> and let <span>$\mathscr{W} = \mathrm{span}\{f_i \otimes f_j \mid i,j=1,\ldots,n\} \subseteq \mathrm{HS}(\mathscr{H})$</span> be the subspace spanned by the rank-one operators <span>$f_i \otimes f_j \in \mathrm{HS}(\mathscr{H})$</span>.
+If <span>$A \in \mathrm{HS}(\mathscr{H})$</span> is any operator such that <span>$A = A^* \geq 0$</span>, then the orthogonal projection <span>$\tilde{A} = P_{\mathscr{W}} A$</span> of <span>$A$</span> onto <span>$\mathscr{W}$</span> also satisfies <span>$\tilde{A} = \tilde{A}^* \geq 0$</span> and there exists some <span>$B = (b_{ij})_{i,j=1}^n \in \mathbb{S}_+^{n \times n}$</span> such that
+<div>
+$$ \notag
+	\tilde{A} = \sum_{i,j=1}^n b_{ij} (f_i \otimes f_j)\,.
+$$
+</div>
+</div>
+<br />
+<i>Proof:</i>
+Let $\mathscr{V} = \mathrm{span}\{f_1,\ldots,f_n\} \subseteq \mathscr{H}$. 
+Then clearly $\mathscr{V}$ is $\tilde{A}$-reducing, more precisely $\tilde{A} \mathscr{V} \subseteq \mathscr{V}$ and $\tilde{A} \mathscr{V}^\perp = \{0\}$.
+Moreover, by definition the orthogonal projection, $\tilde{A}$ satisfies for any $k,l \in \{1,\ldots,n\}$
+$$ 
+\begin{gather*}
+0 
+= \langle \tilde{A} - A, f_k \otimes f_l\rangle
+= \mathrm{tr}((f_l \otimes f_k)(\tilde{A} - A)) \\
+= \langle f_k, (\tilde{A} - A) f_l\rangle
+= \langle f_k, \tilde{A} f_l\rangle - \langle f_k, A f_l\rangle\,,
+\end{gather*}
+$$ 
+which by linearity implies that $\langle \tilde{A}f,g \rangle = \langle Af,g\rangle$ for any $f,g \in \mathscr{V}$.
+This implies that the restriction $\tilde{A} \mid \mathscr{V}$ is self-adjoint and nonnegative on $\mathscr{V}$.
+Moreover, the restriction $\tilde{A} \mid \mathscr{V}^\perp = 0$ is clearly self-adjoint and nonnegative. 
+Thus $\tilde{A}$ is self-adjoint and nonnegative on the entire space $\mathscr{H}$. 
+Since $\tilde{A} \in \mathscr{W}$, it has the form
+$$ \notag
+\tilde{A} = \sum_{i,j=1}^n \tilde{b}_{ij} (f_i \otimes f_j)
+$$
+for some coefficients $\tilde{b}_{ij} \in \mathbb{R}$.
+Let $\{e_1,\ldots,e_p\} \subseteq \mathscr{V}$ be any basis.
+Then write $f_i = \sum_{j=1}^p \alpha_{ij} e_j$ and $e_j = \sum_{i=1}^n \beta_{ji} f_i$ for some $\alpha_{ij}, \beta_{ji} \in \mathbb{R}$.
+Then by expanding the definition of $\tilde{A}$ first w.r.t. $e_j$ and then back w.r.t. $f_i$ we obtain
+$$ \notag
+\tilde{A} 
+= \sum_{k,l=1}^p \underbrace{\left(\sum_{i,j=1}^n \tilde{b}_{ij} \alpha_{ik} \alpha_{jl}  \right)}_{=:\widehat{b}_{kl}} (e_k \otimes e_l)
+= \sum_{i,j=1}^n \underbrace{\left(\sum_{k,l=1}^p \widehat{b}_{kl} \beta_{ik} \beta_{jl}  \right)}_{=:b_{ij}} (f_i \otimes f_j)\,,
+$$
+where $\widehat{B} = (\widehat{b}_{kl})_{k,l=1}^p \in \mathbb{S}_+^{p \times p}$, since it is the matrix representation of a nonnegative self-adjoint operator, i.e. $\widehat{b}_{kl} = \langle e_k,\tilde{A}e_l \rangle$, and $B = (b_{ij})_{i,j=1}^n \in \mathbb{S}_+^{n \times n}$, since $B = (\beta_i^\top \widehat{B} \beta_j)_{i,j=1}^n$ is the Gram-matrix of the kernel $t(x,y) = y^\top \widehat{B} x$ with respect to the vectors $\beta_i = (\beta_{ki})_{k=1}^p \in \mathbb{R}^p$.
+&#x25A1;
+<br /><br />
+<b> The main lesson </b> of the previous lemma that I learned is that, in order to preserve properties of elements in a RKHS, one needs to project possibly onto a larger subspace than given by the data.
+Here, to preserve <span>$A^* = A \geq 0$</span> we need to project onto <span>$\mathscr{W}_{\text{data}}$</span> instead of projecting onto the smaller subspace <span>$\tilde{\mathscr{W}}_{\text{data}}$</span>. 
+<br /> <br />
+In view of the previous discussion, the proof of the <a href="#thm:representerTheoremkSoS">kSoS representer theorem</a> proceeds now, with use of the <a href="#thm:projectionPSDOperator">lemma</a>, along the lines of the proof of the <a href="#thm:representerTheorem">original representer theorem</a>.
+<br /> <br />
+Note that similarly to the cone <span>$C$</span>, the (self-dual) cone <span>$\{A \mid A = A^* \geq 0\} \subseteq \mathrm{HS}(\mathscr{H})$</span> is not finitely generated.
+Why were we then, contrary to <span>\eqref{eq:nonnegativeSVR}</span>, able to reduce the problem <span>\eqref{eq:kSoSSVR}</span> to a finite-dimensional one?
+Because there exists a finite dimensional subspace containing the subspace generated by the data and such that the cone <span>$\{A \mid A = A^* \geq 0\}$</span> is invariant under the orthogonal projection onto this subspace.
+<br /><br />
+[1] J. A. Bagnell, A.-m. Farahmand. “Learning positive functions in a Hilbert space”. In: NIPS Workshop on Optimization (OPT2015). Vol. 20. 2015, pp. 3240–3255. <br />
+[2] I. Steinwart, A. Christmann. Support vector machines. Springer Science &amp; Business Media, 2008. <br />
+[3] J. Suykens et al. Least squares support vector machines. World Scientific Publishing, Singapore, 2002. <br />
+[4] B. Scholkopf, A. J. Smola. Learning with kernels: support vector machines, regularization, optimization, and beyond. MIT press, 2018. <br />
+[5] U. Marteau-Ferey, F. Bach, A. Rudi. “Non-parametric models for non-negative functions”. In: Advances in neural information processing systems 33 (2020), pp. 12816–12826. <br />
+
+
+
+</div></div>
+
+  </div><a class="u-url" href="/posts/2024/03/30/kSoS.html" hidden></a>
+</article>
+
+
+
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">CompleteMetricSpace</li>
+          <li><a class="u-email" href="mailto:wellington [a@t] live.ru">wellington [a@t] live.ru</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A small blog to share some of my observations about different areas of mathematics and control theory.  Powered by Jekyll and hosted by Github. 
+</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+   
+</html>
+
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ TeX: { equationNumbers: { autoNumber: "all" } } }); </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>

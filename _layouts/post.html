@@ -1,0 +1,123 @@
+---
+layout: base
+---
+
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
+    <p class="post-meta">
+      {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+        {{ page.date | date: date_format }}
+      </time>
+      {%- if page.modified_date -%}
+        ~ 
+        {%- assign mdate = page.modified_date | date_to_xmlschema -%}
+        <time class="dt-modified" datetime="{{ mdate }}" itemprop="dateModified">
+          {{ mdate | date: date_format }}
+        </time>
+      {%- endif -%}
+      {%- if page.author -%}
+        • {% for author in page.author %}
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">{{ author }}</span></span>
+            {%- if forloop.last == false %}, {% endif -%}
+        {% endfor %}
+      {%- endif -%}</p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <span style="display:none;">
+    $\newcommand\mynewcommand[1]{\let#1\relax\newcommand#1}
+	%Umlauts for German writing
+	\mynewcommand{\a}{\"a}
+	\mynewcommand{\u}{\"u}
+	\mynewcommand{\o}{\"o}
+	\mynewcommand{\A}{\"A}
+	\mynewcommand{\O}{\"O}
+	\mynewcommand{\U}{\"U}
+
+	%Different (math) fonts
+	\mynewcommand{\f}[1]{\mathfrak{#1}}
+	\mynewcommand{\c}[1]{\mathcal{#1}}
+	\mynewcommand{\b}[1]{\mathbb{#1}}
+	\mynewcommand{\bf}[1]{\bm{#1}}
+	%\mynewcommand{\s}[1]{\mathcal{#1}}
+	\mynewcommand{\s}[1]{\mathscr{#1}}
+	\mynewcommand{\bs}[1]{\boldsymbol{#1}}
+
+	%General math notation
+	\mynewcommand{\im}{\text{im}\;}
+	\mynewcommand{\id}{\text{id}}
+	\mynewcommand{\leq}{\leqslant}
+	\mynewcommand{\geq}{\geqslant}
+	\mynewcommand{\bar}[1]{\overline{#1}}
+	\let\shat\hat
+	\mynewcommand{\hat}[1]{\widehat{#1}}
+	\mynewcommand{\tilde}[1]{\widetilde{#1}}
+	\mynewcommand{\ts}{\otimes}
+	\mynewcommand{\vec}[1]{\overrightarrow{#1}}
+	\DeclareMathOperator{\supp}{supp}     
+	\mynewcommand\mapsfrom{\mathrel{\reflectbox{\ensuremath{\mapsto}}}}        
+	\mynewcommand{\intg}[3]{\int_{#1} #2 \,\text{d}#3}
+	\mynewcommand{\intb}[4]{\int_{#1}^{#2} #3 \,\text{d}#4}
+	\mynewcommand{\ointg}[3]{\oint_{#1} #2 \,\text{d}#3}
+	\mynewcommand{\ointb}[4]{\oint_{#1}^{#2} #3 \,\text{d}#4}
+	\mynewcommand{\R}{\mathrm{R}}
+	\mynewcommand{\N}{\mathrm{N}}
+	\mynewcommand{\eps}{\varepsilon}
+	\mynewcommand{\phi}{\varphi}
+	\mynewcommand{\-}{\text{-}}
+	\mynewcommand{\Re}{\mathrm{Re}}
+	\mynewcommand{\Im}{\mathrm{Im}}
+	\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+	\DeclareMathOperator*{\esssup}{ess\,sup}
+	\mynewcommand{\conj}[1]{\f{conj}(#1)}
+	\mynewcommand{\indset}[2]{[#1,#2\rangle}
+	\DeclareMathOperator{\ct}{\mathcal{c}}
+	\DeclareMathOperator{\clos}{clos}
+	\DeclareMathOperator{\slim}{s-lim}
+	\DeclareMathOperator{\conv}{conv}
+	\DeclareMathOperator{\cconv}{\bar{\conv}}
+	\DeclareMathOperator{\ext}{ext}
+
+	%Functional Analysis
+
+	\DeclarePairedDelimiter{\ipr}{\langle}{\rangle}
+	\mynewcommand{\sc}{\langle \cdot,\cdot\rangle}
+	\mynewcommand{\pr}{\text{pr}\,}
+	\mynewcommand{\Def}{\text{Def}}
+	\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+	%\mynewcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+
+	%Probability Theory
+	\mynewcommand{\1}{\mathbbm{1}}
+	\mynewcommand{\E}{\mathbb{E}}
+	\DeclareMathOperator{\Var}{Var}
+	\mynewcommand{\Ber}{\text{Ber}}
+
+	\newtheorem{theorem}{Theorem}
+	\newtheorem{lemma}{Lemma}
+	\newtheorem{corollary}[theorem]{Corollary}
+	\newtheorem{defn}[theorem]{Definition}
+	\newtheorem{example}[theorem]{Example}
+	\newtheorem{remark}[theorem]{Remark}
+
+	\newcommand{\mat}[1]{\left(\begin{matrix}#1\end{matrix}\right)}
+	\newcommand{\smat}[1]{\left(\begin{smallmatrix}#1\end{smallmatrix}\right)}
+	\newcommand{\rmat}[1]{\begin{matrix}#1\end{matrix}}
+     $</span> 
+    {{ content }}
+  </div>
+
+  {%- if site.disqus.shortname -%}
+    {%- include disqus_comments.html -%}
+  {%- endif -%}
+
+  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
+</article>
+
+
+
